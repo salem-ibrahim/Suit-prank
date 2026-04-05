@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suit Selector - Locked Runaway</title>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;
+            background-color: #000; color: white;
+            display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;
+        }
+
+        /* 2. الـ "Card" نفسه خليته relative ومهم جداً يكون فيه overflow: visible */
+        .card {
+            background: #111; padding: 40px; border-radius: 15px;
+            text-align: center; border: 1px solid #333; width: 400px; min-height: 350px;
+            position: relative; /* الـ "Anchor" للحركة */
+        }
+
+        /* تنسيقات عامة */
+        input {
+            display: block; margin: 15px auto; padding: 12px; width: 85%;
+            background: #222; border: 1px solid #444; color: white; border-radius: 8px;
+        }
+        button {
+            padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;
+        }
+        .btn-login { background: #fff; color: #000; width: 92%; margin-top: 10px; }
+
+        /* صفحة الاختيارات (التركيز هنا) */
+        #selection-page { display: none; }
+        
+        .options-wrapper {
+            margin-top: 60px;
+            position: relative;
+            height: 180px; /* مساحة افتراضية */
+        }
+
+        #black-suit-btn {
+            background: #2ecc71; color: white; width: 200px;
+            position: relative; z-index: 10; /* عشان يفضل ظاهر وفوق الزرار التاني */
+        }
+
+        #other-color-btn {
+            background: #e74c3c; color: white; width: 200px;
+            position: absolute; /* ضروري للحركة */
+            left: 50%;
+            bottom: 20px; /* مكان البداية */
+            transform: translateX(-50%); /* للتوسيط */
+            transition: 0.1s ease;
+            z-index: 5;
+        }
+
+        /* جدول الإدمن */
+        #admin-page { display: none; width: 90%; max-width: 600px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 12px; text-align: left; }
+        th { background: #222; }
+    </style>
+</head>
+<body>
+
+    <div id="login-page" class="card">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
+    </div>
+
+    <div id="selection-page" class="card">
+        <h3>Welcome, <span id="display-name"></span></h3>
+        <p>Pick your suit color:</p>
+        <div class="options-wrapper">
+            <button id="black-suit-btn" onclick="submitChoice('Black Suit')">Black Suit</button>
+            
+            <button id="other-color-btn">Other Color</button>
+        </div>
+    </div>
+
+    <div id="admin-page" class="card">
+        <h2>Admin Panel</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Choice</th>
+                </tr>
+            </thead>
+            <tbody id="logs-body"></tbody>
+        </table>
+        <button style="margin-top:20px; background:#444; color:white;" onclick="location.reload()">Logout</button>
+    </div>
+
+    <script>
+        let currentUser = "";
+
+        function handleLogin() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+
+            if (user === "admin" && pass === "123") {
+                showAdmin();
+            } else if (user !== "") {
+                currentUser = user;
+                document.getElementById('display-name').innerText = user;
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('selection-page').style.display = 'block';
+            } else {
+                alert("Please enter a username");
+            }
+        }
+
+        function submitChoice(choice) {
+            let data = JSON.parse(localStorage.getItem('logs')) || [];
+            data.push({ name: currentUser, choice: choice });
+            localStorage.setItem('logs', JSON.stringify(data));
+            alert("Nice choice!");
+            location.reload();
+        }
+
+        function showAdmin() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('admin-page').style.display = 'block';
+            const body = document.getElementById('logs-body');
+            const data = JSON.parse(localStorage.getItem('logs')) || [];
+            body.innerHTML = data.map(d => `<tr><td>${d.name}</td><td>${d.choice}</td></tr>`).join('');
+        }
+
+        // ============================================
+        // منطق الهروب المضمون والـ "Locked"
+        // ============================================
+        const runawayBtn = document.getElementById('other-color-btn');
+        const card = document.querySelector('#selection-page');
+
+        runawayBtn.addEventListener('mouseover', () => {
+            // بنحسب حجم الزرار نفسه عشان نعمل حسابنا
+            const btnWidth = runawayBtn.offsetWidth;
+            const btnHeight = runawayBtn.offsetHeight;
+            
+            // بنحسب مساحة الكارت المتاحة، وبنشيل منها مساحة الزرار والـ Padding (مثلاً 10px)
+            const padding = 10;
+            const maxX = card.clientWidth - btnWidth - (padding * 2);
+            const maxY = card.clientHeight - btnHeight - (padding * 2);
+
+            // بنولد إحداثيات عشوائية مضمونة إنها جوه المساحة
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+
+            // بننقل الزرار بالأبعاد الجديدة، وبنلغي التوسيط عشان ميبوظش الأبعاد
+            runawayBtn.style.position = 'absolute'; // نضمن إنها absolute
+            runawayBtn.style.left = padding + newX + 'px'; // إضافة الـ Padding من الشمال
+            runawayBtn.style.top = padding + newY + 'px'; // إضافة الـ Padding من فوق
+            runawayBtn.style.bottom = 'auto'; // إلغاء البداية الافتراضية
+            runawayBtn.style.transform = 'none'; // إلغاء التوسيط القديم عشان الإحداثيات تكون أدق
+        });
+    </script>
+</body>
+</html>
