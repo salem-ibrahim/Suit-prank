@@ -90,7 +90,7 @@
             const data = { name: currentUser, choice: choice, date: new Date().toLocaleString() };
             fetch(dbURL, { method: "POST", body: JSON.stringify(data) })
             .then(() => {
-                alert("Great choice! Your selection is saved.");
+                alert(" والله فهمان انك اختارت اسود ");
                 location.reload();
             });
         }
